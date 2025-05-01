@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mozi Foglalás - Kid in Japan</title>
+  <title>Házimozi - Foglalás</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -67,65 +67,93 @@
 </head>
 <body>
   <header>
-    🎬 Mozi Foglalás - Kid in Japan
+    🎥 Házimozi - Foglalás
   </header>
 
-  <div class="movie">
-    <img src="https://via.placeholder.com/400x200" alt="Kid in Japan" style="width: 100%; border-radius: 10px;">
-    <p><strong>Leírás:</strong> Egy japán kalandfilm gyerekeknek. (Teszt film)</p>
-
-    <form id="bookingForm">
-      <label for="name">Név:</label><br>
-      <input type="text" id="name" name="name" required><br>
-
-      <div class="seats" id="seatGrid"></div>
-
-      <button type="submit">Foglalás</button>
-    </form>
-  </div>
+  <div id="movies"></div>
 
   <footer>
     &copy; 2025 Saját Mozi rendszer - Balazs
   </footer>
 
   <script>
-    const rows = 4;
-    const cols = 6;
-    const bookedSeats = JSON.parse(localStorage.getItem("bookings") || "[]");
+    const movies = [
+      {
+        title: "Kid in Japan",
+        desc: "Egy film ami bemutatja a Japán Kulturát",
+        img: "https://via.placeholder.com/400x200",
+        key: "kidinjapan"
+      },
+      {
+        title: "János Vitéz (2025)",
+        desc: "A János Vitéz 2025 verzója.",
+        img: "https://via.placeholder.com/400x200?text=Janos+Vitez",
+        key: "janosvitez"
+      },
+      {
+        title: "Véletlenül néztem egy filmet",
+        desc: "Kérdezd meg a mozi főnököt",
+        img: "https://via.placeholder.com/400x200?text=Veletlen+Film",
+        key: "veletlenfilm"
+      }
+    ];
 
-    const seatGrid = document.getElementById("seatGrid");
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
-        const seatId = `${String.fromCharCode(65 + row)}${col + 1}`;
-        const seat = document.createElement("button");
-        seat.textContent = seatId;
-        seat.classList.add("seat");
-        if (bookedSeats.find(b => b.seat === seatId)) {
-          seat.classList.add("booked");
-          seat.disabled = true;
+    const container = document.getElementById("movies");
+
+    movies.forEach(movie => {
+      const div = document.createElement("div");
+      div.className = "movie";
+      div.innerHTML = `
+        <h2>${movie.title}</h2>
+        <img src="${movie.img}" alt="${movie.title}" style="width: 100%; border-radius: 10px;">
+        <p><strong>Leírás:</strong> ${movie.desc}</p>
+        <form data-key="${movie.key}">
+          <label for="name-${movie.key}">Név:</label><br>
+          <input type="text" id="name-${movie.key}" required><br>
+          <div class="seats"></div>
+          <button type="submit">Foglalás</button>
+        </form>
+      `;
+
+      const seatGrid = div.querySelector(".seats");
+      const rows = 4, cols = 6;
+      const bookings = JSON.parse(localStorage.getItem("bookings-" + movie.key) || "[]");
+
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const seatId = `${String.fromCharCode(65 + row)}${col + 1}`;
+          const seat = document.createElement("button");
+          seat.textContent = seatId;
+          seat.classList.add("seat");
+          if (bookings.find(b => b.seat === seatId)) {
+            seat.classList.add("booked");
+            seat.disabled = true;
+          }
+          seat.dataset.seat = seatId;
+          seat.addEventListener("click", function(e) {
+            seatGrid.querySelectorAll(".seat.selected").forEach(s => s.classList.remove("selected"));
+            seat.classList.add("selected");
+          });
+          seatGrid.appendChild(seat);
         }
-        seat.dataset.seat = seatId;
-        seat.addEventListener("click", function(e) {
-          document.querySelectorAll(".seat.selected").forEach(s => s.classList.remove("selected"));
-          seat.classList.add("selected");
-        });
-        seatGrid.appendChild(seat);
       }
-    }
 
-    document.getElementById("bookingForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const name = document.getElementById("name").value.trim();
-      const selected = document.querySelector(".seat.selected");
-      if (!name || !selected) {
-        alert("Kérjük adja meg a nevét és válasszon egy széket.");
-        return;
-      }
-      const seatId = selected.dataset.seat;
-      bookedSeats.push({ name, seat: seatId });
-      localStorage.setItem("bookings", JSON.stringify(bookedSeats));
-      alert(`Sikeres foglalás: ${seatId}`);
-      location.reload();
+      div.querySelector("form").addEventListener("submit", function(e) {
+        e.preventDefault();
+        const nameInput = this.querySelector("input");
+        const name = nameInput.value.trim();
+        const selected = seatGrid.querySelector(".seat.selected");
+        if (!name || !selected) {
+          alert("Kérjük adja meg a nevét és válasszon egy széket.");
+          return;
+        }
+        bookings.push({ name, seat: selected.dataset.seat });
+        localStorage.setItem("bookings-" + movie.key, JSON.stringify(bookings));
+        alert(`Sikeres foglalás: ${selected.dataset.seat}`);
+        location.reload();
+      });
+
+      container.appendChild(div);
     });
   </script>
 </body>
