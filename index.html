@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mozi Foglalás - Kid in Japan</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #eee;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+    header {
+      background: #222;
+      padding: 1em;
+      font-size: 1.5em;
+    }
+    .movie {
+      margin: 20px auto;
+      width: 90%;
+      max-width: 600px;
+      background: #333;
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .seats {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin-top: 20px;
+      justify-items: center;
+    }
+    .seat {
+      width: 40px;
+      height: 40px;
+      background-color: green;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .seat.booked {
+      background-color: red;
+      cursor: not-allowed;
+    }
+    form {
+      margin-top: 20px;
+    }
+    input[type="text"] {
+      padding: 8px;
+      width: 80%;
+      max-width: 300px;
+    }
+    button {
+      padding: 10px 20px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    footer {
+      margin-top: 40px;
+      font-size: 0.9em;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    🎬 Mozi Foglalás - Kid in Japan
+  </header>
+
+  <div class="movie">
+    <img src="https://via.placeholder.com/400x200" alt="Kid in Japan" style="width: 100%; border-radius: 10px;">
+    <p><strong>Leírás:</strong> Egy japán kalandfilm gyerekeknek. (Teszt film)</p>
+
+    <form id="bookingForm">
+      <label for="name">Név:</label><br>
+      <input type="text" id="name" name="name" required><br>
+
+      <div class="seats" id="seatGrid"></div>
+
+      <button type="submit">Foglalás</button>
+    </form>
+  </div>
+
+  <footer>
+    &copy; 2025 Saját Mozi rendszer - Balazs
+  </footer>
+
+  <script>
+    const rows = 4;
+    const cols = 6;
+    const bookedSeats = JSON.parse(localStorage.getItem("bookings") || "[]");
+
+    const seatGrid = document.getElementById("seatGrid");
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const seatId = `${String.fromCharCode(65 + row)}${col + 1}`;
+        const seat = document.createElement("button");
+        seat.textContent = seatId;
+        seat.classList.add("seat");
+        if (bookedSeats.find(b => b.seat === seatId)) {
+          seat.classList.add("booked");
+          seat.disabled = true;
+        }
+        seat.dataset.seat = seatId;
+        seat.addEventListener("click", function(e) {
+          document.querySelectorAll(".seat.selected").forEach(s => s.classList.remove("selected"));
+          seat.classList.add("selected");
+        });
+        seatGrid.appendChild(seat);
+      }
+    }
+
+    document.getElementById("bookingForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const name = document.getElementById("name").value.trim();
+      const selected = document.querySelector(".seat.selected");
+      if (!name || !selected) {
+        alert("Kérjük adja meg a nevét és válasszon egy széket.");
+        return;
+      }
+      const seatId = selected.dataset.seat;
+      bookedSeats.push({ name, seat: seatId });
+      localStorage.setItem("bookings", JSON.stringify(bookedSeats));
+      alert(`Sikeres foglalás: ${seatId}`);
+      location.reload();
+    });
+  </script>
+</body>
+</html>
